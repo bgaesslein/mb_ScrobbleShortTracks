@@ -1,5 +1,5 @@
-# Scrobble Item
-MusicBee plugin that allows you to scrobble any album or track in your library without fully playing it.
+# Scrobble Short Tracks
+MusicBee plugin that allows you to scrobble tracks shorter than 30 seconds.
 
 ## Installation
 1. Download the latest release
@@ -9,5 +9,7 @@ MusicBee plugin that allows you to scrobble any album or track in your library w
 5. Sign into Last.FM using the built-in plugin and scrobble away!
 
 ## Usage
-1. Right click a song or album in your library
-2. Select `Scrobble`
+Just play the songs and they will be scrobbled automatically.
+
+## Acknowledgements
+Many thanks to TrevTV for the [mb_ScrobbleItem](https://github.com/TrevTV/mb_ScrobbleItem) plugin, I never would've found out how to get to the scrobbling method without it.
