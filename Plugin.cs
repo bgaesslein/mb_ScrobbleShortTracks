@@ -91,6 +91,16 @@ namespace MusicBeePlugin
                     }
 
                     break;
+
+                case NotificationType.TrackChanged:
+                    double duration = mbApiInterface.NowPlaying_GetDuration() / 1000;
+                    if (duration < 30)
+                    {
+                        MetaDataType[] fields = { MetaDataType.Artist, MetaDataType.TrackTitle, MetaDataType.Album, MetaDataType.AlbumArtist };
+                        mbApiInterface.NowPlaying_GetFileTags(fields, out string[] tags);
+                        ScrobbleItem(tags[0], tags[1], tags[2], tags[3], DateTime.UtcNow, duration);
+                    }
+                    break;
             }
         }
 
