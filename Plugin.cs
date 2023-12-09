@@ -28,12 +28,12 @@ namespace MusicBeePlugin
             mbApiInterface = new MusicBeeApiInterface();
             mbApiInterface.Initialise(apiInterfacePtr);
             about.PluginInfoVersion = PluginInfoVersion;
-            about.Name = "Scrobble Item";
-            about.Description = "Allows you to scrobble any album or track in your library without fully playing it.";
-            about.Author = "trev";
+            about.Name = "Scrobble Short Tracks";
+            about.Description = "Allows scrobbling of tracks shorter than 30 seconds.";
+            about.Author = "bgaesslei";
             about.Type = PluginType.General;
             about.VersionMajor = 1;
-            about.VersionMinor = 1;
+            about.VersionMinor = 0;
             about.Revision = 0;
             about.MinInterfaceVersion = 40;
             about.MinApiRevision = 52;
