@@ -70,8 +70,6 @@ namespace MusicBeePlugin
             switch (type)
             {
                 case NotificationType.PluginStartup:
-                    mbApiInterface.MB_AddMenuItem($"context.Main/Scrobble", "", MenuClicked);
-
                     // An unholy concoction of code to deal with obfuscation and the possibility of type and method names changing in later versions
                     var mbAsm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.FullName.Contains("MusicBee"));
                     foreach (var refType in mbAsm.GetTypes())
@@ -94,39 +92,6 @@ namespace MusicBeePlugin
 
                     break;
             }
-        }
-
-        public void MenuClicked(object sender, EventArgs args)
-        {
-            mbApiInterface.Library_QueryFilesEx("domain=SelectedFiles", out string[] files);
-            if (files == null) return;
-
-            List<MBSong> songs = files.Select(f => new MBSong(f)).ToList();
-            double totalSongPlayTime = songs.Select(s => s.Duration).Sum();
-
-            // Allows the plugin to do something similar to OpenScrobbler
-            // "Scrobbling tracks will scrobble the last track at the current time, backdating the previous ones accordingly (as if you had just finished listening)."
-            DateTime startTime = DateTime.UtcNow.AddSeconds(-totalSongPlayTime);
-            var apiCallParameters = new List<KeyValuePair<string, string>>();
-            for (int i = 0; i < songs.Count; i++)
-            {
-                MBSong song = songs[i];
-                startTime = startTime.AddSeconds(song.Duration);
-                long unixTimestamp = (long)startTime.Subtract(UnixStartTime).TotalSeconds;
-                apiCallParameters.Add(CreatePair($"track[{i}]", song.Name));
-                apiCallParameters.Add(CreatePair($"artist[{i}]", song.Artist));
-                apiCallParameters.Add(CreatePair($"albumArtist[{i}]", song.AlbumArtist));
-                apiCallParameters.Add(CreatePair($"album[{i}]", song.AlbumName));
-                apiCallParameters.Add(CreatePair($"duration[{i}]", song.Duration < 30 ? "31" : song.Duration.ToString())); // Weird but allows for scrobbling tracks under 30 seconds
-                apiCallParameters.Add(CreatePair($"timestamp[{i}]", unixTimestamp.ToString()));
-            }
-
-            CallAPIMethod.Invoke(null, new object[]
-            {
-                "track.scrobble",
-                5,
-                apiCallParameters.ToArray()
-            });
         }
 
         private void ScrobbleItem(String artist, String title, String albumName, String albumArtist, DateTime startTime, double duration)
