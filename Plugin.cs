@@ -129,6 +129,26 @@ namespace MusicBeePlugin
             });
         }
 
+        private void ScrobbleItem(String artist, String title, String albumName, String albumArtist, DateTime startTime, double duration)
+        {
+            var apiCallParameters = new List<KeyValuePair<string, string>>();
+            long unixTimestamp = (long)startTime.Subtract(UnixStartTime).TotalSeconds;
+
+            apiCallParameters.Add(CreatePair($"track[0]", title));
+            apiCallParameters.Add(CreatePair($"artist[0]", artist));
+            apiCallParameters.Add(CreatePair($"albumArtist[0]", albumArtist));
+            apiCallParameters.Add(CreatePair($"album[0]", albumName));
+            apiCallParameters.Add(CreatePair($"duration[0]", duration < 30 ? "31" : duration.ToString())); // Weird but allows for scrobbling tracks under 30 seconds
+            apiCallParameters.Add(CreatePair($"timestamp[0]", unixTimestamp.ToString()));
+
+            CallAPIMethod.Invoke(null, new object[]
+            {
+                "track.scrobble",
+                5,
+                apiCallParameters.ToArray()
+            });
+        }
+
         private KeyValuePair<string, string> CreatePair(string key, string value)
             => new KeyValuePair<string, string>(key, value);
     }
