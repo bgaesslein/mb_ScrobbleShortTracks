@@ -22,6 +22,8 @@ namespace MusicBeePlugin
             | BindingFlags.SetField
             | BindingFlags.GetProperty
             | BindingFlags.SetProperty;
+        private const double ScrobbleThresholdMiliseconds = 29963;
+        private const double ScrobbleMinSeconds = 31;
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
@@ -93,12 +95,11 @@ namespace MusicBeePlugin
                     break;
 
                 case NotificationType.TrackChanged:
-                    double duration = mbApiInterface.NowPlaying_GetDuration() / 1000;
-                    if (duration < 30)
+                    if (mbApiInterface.NowPlaying_GetDuration() < ScrobbleThresholdMiliseconds)
                     {
                         MetaDataType[] fields = { MetaDataType.Artist, MetaDataType.TrackTitle, MetaDataType.Album, MetaDataType.AlbumArtist };
                         mbApiInterface.NowPlaying_GetFileTags(fields, out string[] tags);
-                        ScrobbleItem(tags[0], tags[1], tags[2], tags[3], DateTime.UtcNow, duration);
+                        ScrobbleItem(tags[0], tags[1], tags[2], tags[3], DateTime.UtcNow, ScrobbleMinSeconds );
                     }
                     break;
             }
@@ -113,7 +114,7 @@ namespace MusicBeePlugin
             apiCallParameters.Add(CreatePair($"artist[0]", artist));
             apiCallParameters.Add(CreatePair($"albumArtist[0]", albumArtist));
             apiCallParameters.Add(CreatePair($"album[0]", albumName));
-            apiCallParameters.Add(CreatePair($"duration[0]", duration < 30 ? "31" : duration.ToString())); // Weird but allows for scrobbling tracks under 30 seconds
+            apiCallParameters.Add(CreatePair($"duration[0]", duration.ToString()));
             apiCallParameters.Add(CreatePair($"timestamp[0]", unixTimestamp.ToString()));
 
             CallAPIMethod.Invoke(null, new object[]
