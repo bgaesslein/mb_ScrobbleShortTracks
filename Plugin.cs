@@ -25,6 +25,7 @@ namespace MusicBeePlugin
         private const double DefaultThresholdMiliseconds = 29963;
         private const double DefaultThresholdMilisecondsBeta = 29467;
         private const double ScrobbleMinSeconds = 31;
+        private TextBox thresholdTextbox;
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
@@ -41,26 +42,58 @@ namespace MusicBeePlugin
             about.MinInterfaceVersion = 40;
             about.MinApiRevision = 52;
             about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
-            about.ConfigurationPanelHeight = 0;
+            about.ConfigurationPanelHeight = 75;
             return about;
         }
 
         public bool Configure(IntPtr panelHandle)
         {
-            string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
-
             if (panelHandle != IntPtr.Zero)
             {
                 Panel configPanel = (Panel)Panel.FromHandle(panelHandle);
-                Label prompt = new Label();
-                prompt.AutoSize = true;
-                prompt.Location = new Point(0, 0);
-                prompt.Text = "prompt:";
-                TextBox textBox = new TextBox();
-                textBox.Bounds = new Rectangle(60, 0, 100, textBox.Height);
-                configPanel.Controls.AddRange(new Control[] { prompt, textBox });
+                Label thresholdLabel = new Label();
+                thresholdLabel.AutoSize = true;
+                thresholdLabel.Location = new Point(0, 0 + 2);
+                thresholdLabel.Text = "Scrobble Threshold(ms):";
+
+                thresholdTextbox = new TextBox();
+                thresholdTextbox.Location = new Point(thresholdLabel.Width + 35, 0 );
+                thresholdTextbox.Width = 120;
+                thresholdTextbox.Text = GetThreshold();
+                thresholdTextbox.BackColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(SkinElement.SkinInputControl,
+                                                                                                        ElementState.ElementStateDefault,
+                                                                                                        ElementComponent.ComponentBackground));
+                thresholdTextbox.ForeColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(SkinElement.SkinInputControl,
+                                                                                                        ElementState.ElementStateDefault,
+                                                                                                        ElementComponent.ComponentForeground));
+                thresholdTextbox.BorderStyle = BorderStyle.FixedSingle;
+
+                Button resetButton = new Button();
+                resetButton.FlatAppearance.BorderColor = Color.FromArgb(mbApiInterface.Setting_GetSkinElementColour(SkinElement.SkinInputControl, ElementState.ElementStateDefault, ElementComponent.ComponentBorder));
+                resetButton.Font = mbApiInterface.Setting_GetDefaultFont();
+                resetButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+                resetButton.Text = "Set default";
+                resetButton.Click += ResetButton_Click;
+                resetButton.Location = new Point(thresholdTextbox.Location.X + thresholdTextbox.Width + 5, 0); 
+
+                Label thresholdInfo = new Label();
+                thresholdInfo.Location = new Point(0, thresholdTextbox.Height + 8);
+                thresholdInfo.MaximumSize = new System.Drawing.Size(480, 0);
+                thresholdInfo.Text = $"Default threshold is {GetDefaultThreshold():n0}ms. The built-in last.fm plugin should scrobble any song longer than this. Unfortunately, this seems to be inconsistent so if you're still experiencing double scrobbles, try lowering the threshold.";
+                thresholdInfo.AutoSize = true;
+
+                configPanel.Controls.AddRange(new Control[] { thresholdInfo, thresholdLabel, thresholdTextbox, resetButton });
             }
             return false;
+        }
+
+        private void ResetButton_Click(object sender, EventArgs e)
+        {
+            if (thresholdTextbox is null)
+            {   
+                return;
+            }
+            thresholdTextbox.Text = GetDefaultThreshold();
         }
 
         private string GetThreshold()
@@ -88,7 +121,8 @@ namespace MusicBeePlugin
 
         public void SaveSettings()
         {
-            string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+            Properties.Settings.Default.scrobbleShortTracksUserThreshold = thresholdTextbox.Text;
+            Properties.Settings.Default.Save();
         }
 
         public void ReceiveNotification(string sourceFileUrl, NotificationType type)
