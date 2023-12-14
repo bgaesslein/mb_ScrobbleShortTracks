@@ -134,12 +134,12 @@ namespace MusicBeePlugin
             var apiCallParameters = new List<KeyValuePair<string, string>>();
             long unixTimestamp = (long)startTime.Subtract(UnixStartTime).TotalSeconds;
 
-            apiCallParameters.Add(CreatePair($"track[0]", title));
-            apiCallParameters.Add(CreatePair($"artist[0]", artist));
-            apiCallParameters.Add(CreatePair($"albumArtist[0]", albumArtist));
-            apiCallParameters.Add(CreatePair($"album[0]", albumName));
-            apiCallParameters.Add(CreatePair($"duration[0]", duration.ToString()));
-            apiCallParameters.Add(CreatePair($"timestamp[0]", unixTimestamp.ToString()));
+            apiCallParameters.Add(CreatePair("track", title));
+            apiCallParameters.Add(CreatePair("artist", artist));
+            apiCallParameters.Add(CreatePair("albumArtist", albumArtist));
+            apiCallParameters.Add(CreatePair("album", albumName));
+            apiCallParameters.Add(CreatePair("duration", duration.ToString()));
+            apiCallParameters.Add(CreatePair("timestamp", unixTimestamp.ToString()));
 
             CallAPIMethod.Invoke(null, new object[]
             {
