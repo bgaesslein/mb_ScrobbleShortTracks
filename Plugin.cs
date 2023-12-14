@@ -22,7 +22,8 @@ namespace MusicBeePlugin
             | BindingFlags.SetField
             | BindingFlags.GetProperty
             | BindingFlags.SetProperty;
-        private const double ScrobbleThresholdMiliseconds = 29963;
+        private const double DefaultThresholdMiliseconds = 29963;
+        private const double DefaultThresholdMilisecondsBeta = 29467;
         private const double ScrobbleMinSeconds = 31;
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
@@ -62,6 +63,29 @@ namespace MusicBeePlugin
             return false;
         }
 
+        private string GetThreshold()
+        {
+            if (Properties.Settings.Default.scrobbleShortTracksUserThreshold is null || Properties.Settings.Default.scrobbleShortTracksUserThreshold == "")
+            {
+                return GetDefaultThreshold();
+            }
+            else
+            {
+                return Properties.Settings.Default.scrobbleShortTracksUserThreshold;
+            }
+        }
+
+        private string GetDefaultThreshold()
+        {
+            if (mbApiInterface.ApiRevision > 55)
+            {
+                return DefaultThresholdMilisecondsBeta.ToString();
+            } else
+            {
+                return DefaultThresholdMiliseconds.ToString();
+            }
+        }
+
         public void SaveSettings()
         {
             string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
@@ -95,7 +119,7 @@ namespace MusicBeePlugin
                     break;
 
                 case NotificationType.TrackChanged:
-                    if (mbApiInterface.NowPlaying_GetDuration() < ScrobbleThresholdMiliseconds)
+                    if (mbApiInterface.NowPlaying_GetDuration() < Double.Parse(GetThreshold()))
                     {
                         MetaDataType[] fields = { MetaDataType.Artist, MetaDataType.TrackTitle, MetaDataType.Album, MetaDataType.AlbumArtist };
                         mbApiInterface.NowPlaying_GetFileTags(fields, out string[] tags);
