@@ -26,6 +26,8 @@ namespace MusicBeePlugin
         private const double DefaultThresholdMilisecondsBeta = 29467;
         private const double ScrobbleMinSeconds = 31;
         private TextBox thresholdTextbox;
+        private string previousPlaycount;
+        private double previousDurationMiliseconds;
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
@@ -130,6 +132,7 @@ namespace MusicBeePlugin
             switch (type)
             {
                 case NotificationType.PluginStartup:
+                    previousPlaycount = mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.PlayCount);
                     // An unholy concoction of code to deal with obfuscation and the possibility of type and method names changing in later versions
                     var mbAsm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.FullName.Contains("MusicBee"));
                     foreach (var refType in mbAsm.GetTypes())
@@ -153,11 +156,16 @@ namespace MusicBeePlugin
                     break;
 
                 case NotificationType.TrackChanged:
-                    if (mbApiInterface.NowPlaying_GetDuration() < Double.Parse(GetThreshold()))
+                    previousPlaycount = mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.PlayCount);
+                    previousDurationMiliseconds = mbApiInterface.NowPlaying_GetDuration();
+                    break;
+
+                case NotificationType.PlayCountersChanged:
+                    if (previousDurationMiliseconds < Double.Parse(GetThreshold()) && !(previousPlaycount == mbApiInterface.Library_GetFileProperty(sourceFileUrl, FilePropertyType.PlayCount)))
                     {
                         MetaDataType[] fields = { MetaDataType.Artist, MetaDataType.TrackTitle, MetaDataType.Album, MetaDataType.AlbumArtist };
                         mbApiInterface.NowPlaying_GetFileTags(fields, out string[] tags);
-                        ScrobbleItem(tags[0], tags[1], tags[2], tags[3], DateTime.UtcNow, ScrobbleMinSeconds );
+                        ScrobbleItem(tags[0], tags[1], tags[2], tags[3], DateTime.UtcNow, ScrobbleMinSeconds);
                     }
                     break;
             }
