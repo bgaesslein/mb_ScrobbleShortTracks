@@ -123,7 +123,7 @@ namespace MusicBeePlugin
 
         public void SaveSettings()
         {
-            Properties.Settings.Default.scrobbleShortTracksUserThreshold = thresholdTextbox.Text;
+            Properties.Settings.Default.scrobbleShortTracksUserThreshold = thresholdTextbox.Text == GetDefaultThreshold() ? "" : thresholdTextbox.Text;
             Properties.Settings.Default.Save();
         }
 
